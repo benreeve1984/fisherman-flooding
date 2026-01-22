@@ -48,7 +48,7 @@ def page_header():
     """Page header with app title and emergency context."""
     return Header(
         DivCentered(
-            H1("Flood Pulse", cls="text-3xl font-bold text-primary"),
+            H1("Shabb Flood", cls="text-3xl font-bold text-primary"),
             P("Shabbington Village Road Status", cls="text-muted-foreground"),
             cls="space-y-1"
         ),

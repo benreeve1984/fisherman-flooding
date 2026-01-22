@@ -40,7 +40,7 @@ def register_routes(rt):
         }
 
         return page_layout(
-            "Flood Pulse - Shabbington",
+            "Shabb Flood - Shabbington",
             Main(
                 Container(
                     page_header(),

@@ -1,4 +1,4 @@
-# Flood Pulse - Shabbington
+# Shabb Flood - Shabbington
 
 A mobile-first web app for Shabbington village to track flood conditions and road passability.
 
