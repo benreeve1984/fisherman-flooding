@@ -27,8 +27,8 @@ CONFIDENCE_WEIGHTS = {
 }
 
 # Rate limiting
-RATE_LIMIT_WINDOW = 3600  # 1 hour in seconds
-RATE_LIMIT_MAX = 5  # max reports per window per IP
+RATE_LIMIT_HOUR_MAX = 1  # max reports per hour per IP
+RATE_LIMIT_DAY_MAX = 4   # max reports per 24 hours per IP
 
 # Database
 DATABASE_URL = os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", ""))

@@ -8,8 +8,8 @@ from app.database import get_db_cursor
 from app.config import (
     CONSENSUS_LOOKBACK_HOURS,
     CONFIDENCE_WEIGHTS,
-    RATE_LIMIT_WINDOW,
-    RATE_LIMIT_MAX,
+    RATE_LIMIT_HOUR_MAX,
+    RATE_LIMIT_DAY_MAX,
     IP_SALT,
 )
 from app.models.domain import (
@@ -31,37 +31,53 @@ def hash_ip(ip_address: str) -> str:
 
 def check_rate_limit(ip_hash: str) -> tuple[bool, int]:
     """
-    Check if IP has exceeded rate limit.
+    Check if IP has exceeded rate limit (1/hour, 4/day).
 
     Returns: (is_limited, minutes_until_reset)
     """
     try:
         with get_db_cursor() as cur:
-            window_start = datetime.now(timezone.utc) - timedelta(seconds=RATE_LIMIT_WINDOW)
+            now = datetime.now(timezone.utc)
+            hour_ago = now - timedelta(hours=1)
+            day_ago = now - timedelta(hours=24)
 
+            # Check hourly limit
             cur.execute("""
-                SELECT
-                    COUNT(*) as count,
-                    MIN(timestamp_utc) as oldest_submission
+                SELECT COUNT(*) as count, MAX(timestamp_utc) as latest
                 FROM observations
-                WHERE ip_hash = %s
-                  AND timestamp_utc > %s
-            """, (ip_hash, window_start))
+                WHERE ip_hash = %s AND timestamp_utc > %s
+            """, (ip_hash, hour_ago))
+            hour_row = cur.fetchone()
+            hour_count = hour_row["count"] if hour_row else 0
 
-            row = cur.fetchone()
-            count = row["count"] if row else 0
-
-            if count >= RATE_LIMIT_MAX:
-                # Calculate minutes until oldest submission ages out
-                if row and row["oldest_submission"]:
-                    reset_time = row["oldest_submission"] + timedelta(seconds=RATE_LIMIT_WINDOW)
-                    remaining = (reset_time - datetime.now(timezone.utc)).total_seconds() / 60
+            if hour_count >= RATE_LIMIT_HOUR_MAX:
+                # Minutes until the hour window resets
+                if hour_row and hour_row["latest"]:
+                    reset_time = hour_row["latest"] + timedelta(hours=1)
+                    remaining = (reset_time - now).total_seconds() / 60
                     return True, max(1, int(remaining))
                 return True, 60
+
+            # Check daily limit
+            cur.execute("""
+                SELECT COUNT(*) as count, MIN(timestamp_utc) as oldest
+                FROM observations
+                WHERE ip_hash = %s AND timestamp_utc > %s
+            """, (ip_hash, day_ago))
+            day_row = cur.fetchone()
+            day_count = day_row["count"] if day_row else 0
+
+            if day_count >= RATE_LIMIT_DAY_MAX:
+                # Minutes until oldest submission ages out of 24h window
+                if day_row and day_row["oldest"]:
+                    reset_time = day_row["oldest"] + timedelta(hours=24)
+                    remaining = (reset_time - now).total_seconds() / 60
+                    return True, max(1, int(remaining))
+                return True, 60
+
             return False, 0
     except Exception as e:
         logger.error(f"Rate limit check failed: {e}")
-        # On error, allow the request but log it
         return False, 0
 
 
@@ -71,19 +87,29 @@ def add_observation(
     confidence: Confidence,
     ip_hash: str,
     comment: Optional[str] = None,
+    river_level_m: Optional[float] = None,
+    rainfall_24h_mm: Optional[float] = None,
+    rainfall_48h_mm: Optional[float] = None,
+    rainfall_72h_mm: Optional[float] = None,
 ) -> Optional[str]:
     """
-    Add a new road status observation.
+    Add a new road status observation with environmental context.
 
     Returns the observation ID if successful, None on failure.
     """
     try:
         with get_db_cursor() as cur:
             cur.execute("""
-                INSERT INTO observations (road_id, status, confidence, comment, ip_hash)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO observations (
+                    road_id, status, confidence, comment, ip_hash,
+                    river_level_m, rainfall_24h_mm, rainfall_48h_mm, rainfall_72h_mm
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
-            """, (road_id.value, status.value, confidence.value, comment, ip_hash))
+            """, (
+                road_id.value, status.value, confidence.value, comment, ip_hash,
+                river_level_m, rainfall_24h_mm, rainfall_48h_mm, rainfall_72h_mm
+            ))
 
             row = cur.fetchone()
             return str(row["id"]) if row else None

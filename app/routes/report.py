@@ -6,6 +6,7 @@ from app.services.road_service import (
     add_observation,
     hash_ip,
 )
+from app.services.ea_api import get_live_conditions
 from app.models.domain import RoadId, RoadStatus, Confidence
 
 
@@ -86,13 +87,24 @@ def register_routes(rt):
         # Truncate and sanitize comment
         clean_comment = comment[:280].strip() if comment else None
 
-        # Save observation
+        # Get current environmental conditions for data curation
+        conditions = get_live_conditions()
+        river_level = conditions.river.value if conditions.river else None
+        rainfall_24h = conditions.rainfall_24h
+        rainfall_48h = conditions.rainfall_48h
+        rainfall_72h = conditions.rainfall_72h
+
+        # Save observation with environmental context
         observation_id = add_observation(
             road_id=validated_road,
             status=validated_status,
             confidence=validated_confidence,
             ip_hash=ip_hash,
             comment=clean_comment,
+            river_level_m=river_level,
+            rainfall_24h_mm=rainfall_24h,
+            rainfall_48h_mm=rainfall_48h,
+            rainfall_72h_mm=rainfall_72h,
         )
 
         if observation_id:

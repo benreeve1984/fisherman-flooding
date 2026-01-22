@@ -36,8 +36,9 @@ def status_radio_card(status: RoadStatus, label: str, description: str):
 
 def confidence_radio_card(confidence: Confidence, label: str):
     """A tappable radio card for confidence selection."""
-    # Use accent color change for clear iOS feedback
     input_id = f"confidence-{confidence.value}"
+    # Use onclick on label for reliable iOS support
+    click_handler = f"document.querySelectorAll('.confidence-card').forEach(c => c.classList.remove('selected')); document.getElementById('card-{confidence.value}').classList.add('selected');"
     return Label(
         Input(
             type="radio",
@@ -46,13 +47,13 @@ def confidence_radio_card(confidence: Confidence, label: str):
             id=input_id,
             required=True,
             cls="hidden",
-            onchange="this.closest('form').querySelectorAll('.confidence-card').forEach(c => c.classList.remove('selected')); this.nextElementSibling.classList.add('selected');"
         ),
         Div(
             Span(label, cls="text-sm font-medium"),
+            id=f"card-{confidence.value}",
             cls="confidence-card p-3 rounded-lg border-2 border-muted bg-muted/30 cursor-pointer text-center transition-all"
         ),
-        htmlFor=input_id,
+        onclick=click_handler,
         cls="block"
     )
 
