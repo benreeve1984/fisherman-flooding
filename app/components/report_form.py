@@ -36,6 +36,7 @@ def status_radio_card(status: RoadStatus, label: str, description: str):
 
 def confidence_radio_card(confidence: Confidence, label: str):
     """A tappable radio card for confidence selection."""
+    # Use visible checkbox styling for better iOS feedback
     return Label(
         Input(
             type="radio",
@@ -45,8 +46,8 @@ def confidence_radio_card(confidence: Confidence, label: str):
             cls="peer sr-only"
         ),
         Div(
-            Span(label, cls="text-sm"),
-            cls="p-2 rounded-lg border-2 border-muted peer-checked:border-primary peer-checked:bg-primary/10 cursor-pointer text-center"
+            Span(label, cls="text-sm font-medium"),
+            cls="p-3 rounded-lg border-2 border-muted bg-muted/30 peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground cursor-pointer text-center transition-all"
         ),
         cls="block"
     )

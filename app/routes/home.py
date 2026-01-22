@@ -10,6 +10,7 @@ from app.services.road_service import (
     get_all_consensus,
     get_24h_status_counts,
     get_status_change_info,
+    get_recent_observations,
 )
 from app.models.domain import RoadId
 
@@ -38,6 +39,12 @@ def register_routes(rt):
             for road_id in RoadId
         }
 
+        # Get recent observations for each road
+        road_history = {
+            road_id: get_recent_observations(road_id, limit=5)
+            for road_id in RoadId
+        }
+
         return page_layout(
             "Flood Pulse - Shabbington",
             Main(
@@ -47,31 +54,33 @@ def register_routes(rt):
                     # Road status section - FIRST (most important for drivers)
                     Section(
                         DivLAligned(
-                            H2("Road Conditions", cls="text-xl font-semibold"),
-                            cls="mb-2"
+                            H2("Road Conditions", cls="text-lg font-semibold"),
+                            cls="mb-1"
                         ),
-                        P("Community-reported passability - tap to report", cls="text-sm text-muted-foreground mb-4"),
+                        P("Community-reported passability - tap to report", cls="text-xs text-muted-foreground mb-3"),
                         Div(
                             road_card(
                                 RoadId.ICKFORD_ENTRANCE,
                                 road_statuses[RoadId.ICKFORD_ENTRANCE],
                                 road_stats[RoadId.ICKFORD_ENTRANCE],
                                 status_changes[RoadId.ICKFORD_ENTRANCE],
+                                road_history[RoadId.ICKFORD_ENTRANCE],
                             ),
                             road_card(
                                 RoadId.FISHERMAN_THAME_ENTRANCE,
                                 road_statuses[RoadId.FISHERMAN_THAME_ENTRANCE],
                                 road_stats[RoadId.FISHERMAN_THAME_ENTRANCE],
                                 status_changes[RoadId.FISHERMAN_THAME_ENTRANCE],
+                                road_history[RoadId.FISHERMAN_THAME_ENTRANCE],
                             ),
-                            cls="space-y-4"
+                            cls="space-y-3"
                         ),
-                        cls="mb-8"
+                        cls="mb-6"
                     ),
 
                     # Environmental data section - secondary info
                     Section(
-                        H2("Local Conditions", cls="text-lg font-semibold mb-4 text-muted-foreground"),
+                        H2("Local Conditions", cls="text-sm font-semibold mb-3 text-muted-foreground"),
                         Grid(
                             river_card(conditions.river),
                             rainfall_card(
@@ -82,9 +91,9 @@ def register_routes(rt):
                             ),
                             cols_sm=1,
                             cols_md=2,
-                            cls="gap-4"
+                            cls="gap-3"
                         ),
-                        cls="mb-8"
+                        cls="mb-6"
                     ),
 
                     # Modal container for report forms

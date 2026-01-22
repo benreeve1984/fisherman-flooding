@@ -7,8 +7,10 @@ from app.models.domain import (
     RoadId,
     RoadStatus,
     ConsensusResult,
+    Observation,
     ROAD_LABELS,
     STATUS_LABELS,
+    CONFIDENCE_LABELS,
 )
 from app.components.river_card import format_time_ago
 
@@ -103,17 +105,51 @@ def status_change_banner(
     )
 
 
+def history_list(observations: list[Observation]) -> Div:
+    """Render inline history of recent observations."""
+    if not observations:
+        return Div(
+            P("No recent reports", cls="text-muted-foreground text-sm text-center py-2"),
+        )
+
+    return Div(
+        Ul(
+            *[
+                Li(
+                    DivFullySpaced(
+                        DivLAligned(
+                            status_badge(obs.status),
+                            Span(
+                                CONFIDENCE_LABELS[obs.confidence],
+                                cls="text-muted-foreground text-xs"
+                            ),
+                            cls="gap-2"
+                        ),
+                        Span(format_time_ago(obs.timestamp_utc), cls="text-muted-foreground text-xs"),
+                    ),
+                    P(obs.comment, cls="text-xs text-muted-foreground italic mt-1") if obs.comment else None,
+                    cls="py-1.5"
+                )
+                for obs in observations
+            ],
+            cls="divide-y"
+        ),
+        cls="history-content"
+    )
+
+
 def road_card(
     road_id: RoadId,
     consensus: Optional[ConsensusResult],
     status_counts: Optional[dict[RoadStatus, int]] = None,
     status_change: Optional[tuple[RoadStatus, datetime]] = None,
+    observations: Optional[list[Observation]] = None,
 ):
     """
     Full road status card with consensus display and report button.
 
     This is where alerts come from - community reports.
-    Enhanced with summary stats and status change indicators.
+    Enhanced with summary stats, status change indicators, and inline history.
     """
     road_label = ROAD_LABELS[road_id]
     status = consensus.status if consensus else RoadStatus.UNKNOWN
@@ -129,7 +165,7 @@ def road_card(
                 ),
             ),
             CardBody(
-                P("No recent reports - be the first!", cls="text-muted-foreground text-center py-4"),
+                P("No recent reports - be the first!", cls="text-muted-foreground text-center py-2"),
             ),
             CardFooter(
                 Button(
@@ -137,8 +173,9 @@ def road_card(
                     hx_get=f"/report/{road_id.value}",
                     hx_target="#modal-container",
                     hx_swap="innerHTML",
-                    cls=ButtonT.primary + " w-full text-lg py-3",
+                    cls=ButtonT.primary + " w-full py-3",
                 ),
+                cls="pt-0"
             ),
             cls=f"road-card {border_class}",
             id=f"road-{road_id.value}"
@@ -156,41 +193,37 @@ def road_card(
                 Div(
                     H3(road_label, cls="text-lg font-semibold"),
                     P(f"Last report: {time_ago}", cls="text-sm text-muted-foreground"),
-                    cls="space-y-1"
+                    cls="space-y-0.5"
                 ),
                 status_badge(consensus.status, large=True),
                 cls="items-start"
             ),
+            cls="pb-2"
         ),
 
-        CardBody(
-            # Summary stat
-            Div(
-                P(summary, cls="text-sm text-muted-foreground") if summary else None,
-                cls="mb-2" if summary else ""
-            ),
+        # Summary stat (if any)
+        Div(
+            P(summary, cls="text-sm text-muted-foreground px-4"),
         ) if summary else None,
 
-        CardFooter(
-            DivFullySpaced(
-                Button(
-                    "Report Status",
-                    hx_get=f"/report/{road_id.value}",
-                    hx_target="#modal-container",
-                    hx_swap="innerHTML",
-                    cls=ButtonT.primary + " flex-1 py-3",
-                ),
-                Button(
-                    "History",
-                    hx_get=f"/api/road/{road_id.value}/history",
-                    hx_target=f"#history-{road_id.value}",
-                    hx_swap="innerHTML",
-                    cls=ButtonT.secondary + " py-3",
-                ),
-                cls="gap-2"
+        # Report button
+        Div(
+            Button(
+                "Report Status",
+                hx_get=f"/report/{road_id.value}",
+                hx_target="#modal-container",
+                hx_swap="innerHTML",
+                cls=ButtonT.primary + " w-full py-3",
             ),
+            cls="px-4 py-2"
         ),
-        Div(id=f"history-{road_id.value}", cls="px-4 pb-4"),
+
+        # Always show history inline
+        Div(
+            history_list(observations or []),
+            cls="px-4 pb-3"
+        ),
+
         hx_get=f"/api/road/{road_id.value}",
         hx_trigger="every 30s",
         hx_swap="outerHTML",

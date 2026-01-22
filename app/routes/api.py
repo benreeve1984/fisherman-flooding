@@ -40,8 +40,9 @@ def register_routes(rt):
         consensus = get_consensus(validated_road)
         status_counts = get_24h_status_counts(validated_road)
         status_change = get_status_change_info(validated_road)
+        observations = get_recent_observations(validated_road, limit=5)
 
-        return road_card(validated_road, consensus, status_counts, status_change)
+        return road_card(validated_road, consensus, status_counts, status_change, observations)
 
     @rt('/api/road/{road_id}/history')
     def get(road_id: str):
@@ -66,7 +67,7 @@ def register_routes(rt):
                             DivLAligned(
                                 status_badge(obs.status),
                                 Span(
-                                    f"{CONFIDENCE_LABELS[obs.confidence].lower()}",
+                                    CONFIDENCE_LABELS[obs.confidence],
                                     cls="text-muted-foreground text-sm"
                                 ),
                                 cls="gap-2"

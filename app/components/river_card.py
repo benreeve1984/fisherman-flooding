@@ -63,12 +63,13 @@ def river_card(reading: Optional[RiverReading]):
         return Card(
             CardHeader(
                 H4("River Thame", cls="text-sm font-semibold text-muted-foreground"),
+                cls="pb-1"
             ),
             CardBody(
                 DivCentered(
                     P("Data unavailable", cls="text-muted-foreground text-sm"),
-                    cls="py-2"
                 ),
+                cls="py-2"
             ),
             hx_get="/api/river",
             hx_trigger="load delay:60s",
@@ -85,16 +86,17 @@ def river_card(reading: Optional[RiverReading]):
                 H4("River Thame", cls="text-sm font-semibold text-muted-foreground"),
                 trend_indicator(trend),
             ),
+            cls="pb-1"
         ),
         CardBody(
             DivCentered(
                 Div(
-                    Span(f"{reading.value:.2f}", cls="text-3xl font-bold tabular-nums"),
-                    Span("m", cls="text-lg text-muted-foreground ml-1"),
+                    Span(f"{reading.value:.2f}", cls="text-2xl font-bold tabular-nums"),
+                    Span("m", cls="text-base text-muted-foreground ml-1"),
                     cls="flex items-baseline"
                 ),
-                cls="py-1"
             ),
+            cls="py-1"
         ),
         CardFooter(
             DivCentered(
@@ -104,6 +106,7 @@ def river_card(reading: Optional[RiverReading]):
                     cls="text-muted-foreground"
                 ),
             ),
+            cls="pt-1"
         ),
         hx_get="/api/river",
         hx_trigger="every 60s",

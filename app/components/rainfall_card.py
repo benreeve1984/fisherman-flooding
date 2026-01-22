@@ -8,16 +8,16 @@ def rainfall_stat(period: str, value: Optional[float]):
     if value is None:
         return Div(
             Span(period, cls="text-xs text-muted-foreground block"),
-            Span("--", cls="text-xl font-bold tabular-nums"),
+            Span("--", cls="text-lg font-bold tabular-nums"),
             Span("mm", cls="text-xs text-muted-foreground ml-0.5"),
-            cls="text-center p-2 bg-muted/50 rounded-lg opacity-50"
+            cls="text-center p-1.5 bg-muted/50 rounded-lg opacity-50"
         )
 
     return Div(
         Span(period, cls="text-xs text-muted-foreground block"),
-        Span(f"{value:.1f}", cls="text-xl font-bold tabular-nums"),
+        Span(f"{value:.1f}", cls="text-lg font-bold tabular-nums"),
         Span("mm", cls="text-xs text-muted-foreground ml-0.5"),
-        cls="text-center p-2 bg-muted/50 rounded-lg"
+        cls="text-center p-1.5 bg-muted/50 rounded-lg"
     )
 
 
@@ -46,6 +46,7 @@ def rainfall_card(
     return Card(
         CardHeader(
             H4("Recent Rainfall", cls="text-sm font-semibold text-muted-foreground"),
+            cls="pb-1"
         ),
         CardBody(
             Grid(
@@ -55,11 +56,13 @@ def rainfall_card(
                 cols=3,
                 cls="gap-2"
             ),
+            cls="py-2"
         ),
         CardFooter(
             DivCentered(
                 Small(quality_text, cls=quality_cls),
             ),
+            cls="pt-1"
         ),
         hx_get="/api/rainfall",
         hx_trigger="every 300s",
