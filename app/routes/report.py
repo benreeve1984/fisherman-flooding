@@ -12,8 +12,8 @@ from app.models.domain import RoadId, RoadStatus, Confidence
 def register_routes(rt):
     """Register report submission routes."""
 
-    @rt('/report/{road_id}')
-    def get(road_id: str):
+    @rt('/report/{road_id}', methods=['GET'])
+    def report_get(road_id: str):
         """Display report form for a specific road."""
         # Validate road_id
         try:
@@ -23,8 +23,8 @@ def register_routes(rt):
 
         return report_form(road_id)
 
-    @rt('/report/{road_id}')
-    def post(
+    @rt('/report/{road_id}', methods=['POST'])
+    def report_post(
         road_id: str,
         status: str,
         confidence: str,

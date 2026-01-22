@@ -59,6 +59,20 @@ def get():
     return {"status": "already_initialized"}
 
 
+# Debug endpoint - remove in production
+@rt('/api/debug/observations')
+def get():
+    """Debug: List all observations."""
+    try:
+        from app.database import get_db_cursor
+        with get_db_cursor() as cur:
+            cur.execute("SELECT * FROM observations ORDER BY timestamp_utc DESC LIMIT 20")
+            rows = cur.fetchall()
+            return {"count": len(rows), "observations": [dict(r) for r in rows]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 # Run server
 if __name__ == "__main__":
     serve()
