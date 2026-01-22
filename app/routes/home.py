@@ -93,6 +93,23 @@ def register_routes(rt):
                             cols_md=2,
                             cls="gap-3"
                         ),
+                        # Future plans note
+                        Div(
+                            P(
+                                "This app shares community-reported road conditions. "
+                                "Once we gather sufficient data, we plan to add rules-based and model-based "
+                                "estimates using River Thame levels, rainfall, and seasonal patterns.",
+                                cls="text-xs text-muted-foreground mb-2"
+                            ),
+                            P(
+                                "Suggestions, data sources, issues, or want to contribute? "
+                                "Post in the ",
+                                Strong("Shabby People WhatsApp group"),
+                                " and I'll connect with you.",
+                                cls="text-xs text-muted-foreground"
+                            ),
+                            cls="mt-4 p-3 bg-muted/30 rounded-lg"
+                        ),
                         cls="mb-6"
                     ),
 

@@ -36,19 +36,23 @@ def status_radio_card(status: RoadStatus, label: str, description: str):
 
 def confidence_radio_card(confidence: Confidence, label: str):
     """A tappable radio card for confidence selection."""
-    # Use visible checkbox styling for better iOS feedback
+    # Use accent color change for clear iOS feedback
+    input_id = f"confidence-{confidence.value}"
     return Label(
         Input(
             type="radio",
             name="confidence",
             value=confidence.value,
+            id=input_id,
             required=True,
-            cls="peer sr-only"
+            cls="hidden",
+            onchange="this.closest('form').querySelectorAll('.confidence-card').forEach(c => c.classList.remove('selected')); this.nextElementSibling.classList.add('selected');"
         ),
         Div(
             Span(label, cls="text-sm font-medium"),
-            cls="p-3 rounded-lg border-2 border-muted bg-muted/30 peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground cursor-pointer text-center transition-all"
+            cls="confidence-card p-3 rounded-lg border-2 border-muted bg-muted/30 cursor-pointer text-center transition-all"
         ),
+        htmlFor=input_id,
         cls="block"
     )
 
@@ -158,26 +162,23 @@ def submission_result(success: bool, message: str, road_id: str):
     return Div(
         # Backdrop
         Div(onclick=close_script, cls="fixed inset-0 bg-black/50"),
-        # Result content
+        # Result content - smaller and properly centered
         Div(
-            Div(
-                Span(icon, cls=f"text-5xl {icon_cls}"),
-                H3(title, cls=f"text-xl font-semibold {title_cls} mt-2"),
-                P(message, cls="text-muted-foreground text-center text-sm mt-1"),
-                Button(
-                    "Close",
-                    type="button",
-                    onclick=close_script,
-                    cls=ButtonT.default + " w-full mt-4 py-3"
-                ),
-                cls="text-center"
+            Span(icon, cls=f"text-3xl {icon_cls}"),
+            H3(title, cls=f"text-lg font-semibold {title_cls} mt-1"),
+            P(message, cls="text-muted-foreground text-center text-xs mt-1"),
+            Button(
+                "Close",
+                type="button",
+                onclick=close_script,
+                cls=ButtonT.default + " w-full mt-3 py-2"
             ),
             # Trigger road card refresh on success
             hx_trigger="load" if success else None,
             hx_get=f"/api/road/{road_id}" if success else None,
             hx_target=f"#road-{road_id}" if success else None,
             hx_swap="outerHTML" if success else None,
-            cls="bg-white dark:bg-gray-900 rounded-2xl p-6 mx-4 max-w-sm w-full shadow-2xl fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            cls="bg-white dark:bg-gray-900 rounded-xl p-4 w-64 shadow-2xl fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center"
         ),
         cls="fixed inset-0 z-50",
         id="result-modal"

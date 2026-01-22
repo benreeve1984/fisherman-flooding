@@ -40,7 +40,7 @@ ROAD_DESCRIPTIONS = {
 STATUS_LABELS = {
     RoadStatus.CLEAR: "Clear",
     RoadStatus.CAUTION: "Caution",
-    RoadStatus.HIGH_CLEARANCE: "High Clearance Only",
+    RoadStatus.HIGH_CLEARANCE: "High",
     RoadStatus.CLOSED: "Closed",
     RoadStatus.UNKNOWN: "Unknown",
 }
