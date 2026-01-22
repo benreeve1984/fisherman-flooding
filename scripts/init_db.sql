@@ -1,4 +1,4 @@
--- Flood Pulse Database Schema
+-- Shabb Flood Database Schema
 -- Run this once to initialize the database
 
 -- Observations table for road status reports
