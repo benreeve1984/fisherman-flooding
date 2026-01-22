@@ -2,10 +2,7 @@ from fasthtml.common import *
 from monsterui.all import *
 
 from app.components.layout import page_layout, page_header
-from app.components.river_card import river_card
-from app.components.rainfall_card import rainfall_card
 from app.components.road_card import road_card
-from app.services.ea_api import get_live_conditions
 from app.services.road_service import (
     get_all_consensus,
     get_24h_status_counts,
@@ -20,11 +17,8 @@ def register_routes(rt):
 
     @rt('/')
     def get():
-        """Main dashboard page."""
-        # Get live conditions from EA API
-        conditions = get_live_conditions()
-
-        # Get current road consensus statuses
+        """Main dashboard page - road data loads immediately, env data lazy loads."""
+        # Get current road consensus statuses (fast - just DB queries)
         road_statuses = get_all_consensus()
 
         # Get 24h stats for each road
@@ -78,16 +72,25 @@ def register_routes(rt):
                         cls="mb-6"
                     ),
 
-                    # Environmental data section - secondary info
+                    # Environmental data section - lazy loaded for faster initial render
                     Section(
                         H2("Local Conditions", cls="text-sm font-semibold mb-3 text-muted-foreground"),
                         Grid(
-                            river_card(conditions.river),
-                            rainfall_card(
-                                conditions.rainfall_24h,
-                                conditions.rainfall_48h,
-                                conditions.rainfall_72h,
-                                conditions.rain_data_quality,
+                            # River card - lazy load on page load
+                            Div(
+                                P("Loading...", cls="text-muted-foreground text-sm text-center py-4"),
+                                hx_get="/api/river",
+                                hx_trigger="load",
+                                hx_swap="outerHTML",
+                                cls="river-card",
+                            ),
+                            # Rainfall card - lazy load on page load
+                            Div(
+                                P("Loading...", cls="text-muted-foreground text-sm text-center py-4"),
+                                hx_get="/api/rainfall",
+                                hx_trigger="load",
+                                hx_swap="outerHTML",
+                                cls="rainfall-card",
                             ),
                             cols_sm=1,
                             cols_md=2,
