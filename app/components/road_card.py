@@ -50,10 +50,14 @@ STATUS_CLASSES = {
 
 def status_badge(status: RoadStatus, large: bool = False):
     """Display a status badge with color coding."""
-    size_cls = "text-lg px-4 py-2 font-bold" if large else "text-sm px-3 py-1 font-semibold"
+    if large:
+        # Compact badge for card headers - don't let it get too big
+        size_cls = "text-sm px-3 py-1.5 font-bold whitespace-nowrap"
+    else:
+        size_cls = "text-xs px-2 py-1 font-semibold"
     return Span(
         STATUS_LABELS[status],
-        cls=f"inline-block rounded-full {size_cls} {STATUS_BG_CLASSES[status]} {STATUS_TEXT_CLASSES[status]}"
+        cls=f"inline-block rounded-lg {size_cls} {STATUS_BG_CLASSES[status]} {STATUS_TEXT_CLASSES[status]}"
     )
 
 
