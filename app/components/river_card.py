@@ -1,4 +1,5 @@
 from fasthtml.common import *
+from monsterui.all import *
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -30,29 +31,44 @@ def format_time_ago(dt: Optional[datetime]) -> str:
         return f"{days}d ago"
 
 
-def trend_icon(trend: Optional[str]) -> str:
-    """Get icon for river trend."""
+def trend_indicator(trend: Optional[str]):
+    """Get visual indicator for river trend."""
     if trend == "rising":
-        return "^"  # Arrow up
+        return Span(
+            UkIcon("trending-up", cls="w-4 h-4"),
+            "Rising",
+            cls="inline-flex items-center gap-1 text-red-600 dark:text-red-400 text-sm font-medium"
+        )
     elif trend == "falling":
-        return "v"  # Arrow down
+        return Span(
+            UkIcon("trending-down", cls="w-4 h-4"),
+            "Falling",
+            cls="inline-flex items-center gap-1 text-green-600 dark:text-green-400 text-sm font-medium"
+        )
     else:
-        return "-"  # Steady
+        return Span(
+            UkIcon("minus", cls="w-4 h-4"),
+            "Steady",
+            cls="inline-flex items-center gap-1 text-muted-foreground text-sm font-medium"
+        )
 
 
 def river_card(reading: Optional[RiverReading]):
     """
-    Displays current river level with trend indicator.
+    Compact river level display with trend indicator.
 
     Informational only - no automated alerts based on level.
     """
     if reading is None:
-        return Article(
-            Header(H3("River Thame")),
-            Div(
-                P("Unable to fetch river level data", cls="error-text"),
-                P("Will retry automatically", cls="muted"),
-                cls="error-state"
+        return Card(
+            CardHeader(
+                H4("River Thame", cls="text-sm font-semibold text-muted-foreground"),
+            ),
+            CardBody(
+                DivCentered(
+                    P("Data unavailable", cls="text-muted-foreground text-sm"),
+                    cls="py-2"
+                ),
             ),
             hx_get="/api/river",
             hx_trigger="load delay:60s",
@@ -62,26 +78,32 @@ def river_card(reading: Optional[RiverReading]):
 
     time_ago = format_time_ago(reading.timestamp)
     trend = reading.trend or "steady"
-    trend_label = trend.capitalize()
 
-    return Article(
-        Header(H3("River Thame")),
-        Div(
-            Div(
-                Span(f"{reading.value:.2f}", cls="level-value"),
-                Span("m", cls="level-unit"),
-                cls="level-display"
+    return Card(
+        CardHeader(
+            DivFullySpaced(
+                H4("River Thame", cls="text-sm font-semibold text-muted-foreground"),
+                trend_indicator(trend),
             ),
-            Div(
-                Span(trend_icon(trend), cls=f"trend-icon trend-{trend}"),
-                Span(trend_label, cls="trend-label"),
-                cls="trend-display"
-            ),
-            cls="level-row"
         ),
-        Footer(
-            Small(f"Thame Bridge | {time_ago}"),
-            Small(" (data delayed)", cls="stale-warning") if reading.is_stale else None,
+        CardBody(
+            DivCentered(
+                Div(
+                    Span(f"{reading.value:.2f}", cls="text-3xl font-bold tabular-nums"),
+                    Span("m", cls="text-lg text-muted-foreground ml-1"),
+                    cls="flex items-baseline"
+                ),
+                cls="py-1"
+            ),
+        ),
+        CardFooter(
+            DivCentered(
+                Small(
+                    f"Thame Bridge | {time_ago}",
+                    Span(" (delayed)", cls="text-yellow-600") if reading.is_stale else None,
+                    cls="text-muted-foreground"
+                ),
+            ),
         ),
         hx_get="/api/river",
         hx_trigger="every 60s",

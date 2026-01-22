@@ -1,10 +1,16 @@
 from fasthtml.common import *
+from monsterui.all import *
 
 from app.components.river_card import river_card, format_time_ago
 from app.components.rainfall_card import rainfall_card
-from app.components.road_card import road_card
+from app.components.road_card import road_card, status_badge
 from app.services.ea_api import get_river_level, get_aggregated_rainfall
-from app.services.road_service import get_consensus, get_recent_observations
+from app.services.road_service import (
+    get_consensus,
+    get_recent_observations,
+    get_24h_status_counts,
+    get_status_change_info,
+)
 from app.models.domain import RoadId, CONFIDENCE_LABELS, STATUS_LABELS
 
 
@@ -29,10 +35,13 @@ def register_routes(rt):
         try:
             validated_road = RoadId(road_id)
         except ValueError:
-            return P("Invalid road", cls="error")
+            return P("Invalid road", cls="text-destructive")
 
         consensus = get_consensus(validated_road)
-        return road_card(validated_road, consensus)
+        status_counts = get_24h_status_counts(validated_road)
+        status_change = get_status_change_info(validated_road)
+
+        return road_card(validated_road, consensus, status_counts, status_change)
 
     @rt('/api/road/{road_id}/history')
     def get(road_id: str):
@@ -40,28 +49,36 @@ def register_routes(rt):
         try:
             validated_road = RoadId(road_id)
         except ValueError:
-            return P("Invalid road", cls="error")
+            return P("Invalid road", cls="text-destructive")
 
         observations = get_recent_observations(validated_road, limit=5)
 
         if not observations:
             return Div(
-                P("No recent reports", cls="no-data"),
-                cls="history-list"
+                P("No recent reports", cls="text-muted-foreground text-sm text-center py-2"),
             )
 
         return Div(
             Ul(
                 *[
                     Li(
-                        Span(STATUS_LABELS[obs.status], cls=f"status-badge"),
-                        Span(f" - {CONFIDENCE_LABELS[obs.confidence].lower()}", cls="confidence"),
-                        Span(f" ({format_time_ago(obs.timestamp_utc)})", cls="time-ago"),
-                        P(obs.comment, cls="comment") if obs.comment else None,
+                        DivFullySpaced(
+                            DivLAligned(
+                                status_badge(obs.status),
+                                Span(
+                                    f"{CONFIDENCE_LABELS[obs.confidence].lower()}",
+                                    cls="text-muted-foreground text-sm"
+                                ),
+                                cls="gap-2"
+                            ),
+                            Span(format_time_ago(obs.timestamp_utc), cls="text-muted-foreground text-sm"),
+                        ),
+                        P(obs.comment, cls="text-sm text-muted-foreground italic mt-1") if obs.comment else None,
+                        cls="py-2"
                     )
                     for obs in observations
                 ],
-                cls="history-list"
+                cls="divide-y"
             ),
             cls="history-content"
         )

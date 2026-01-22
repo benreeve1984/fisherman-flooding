@@ -1,12 +1,15 @@
 from fasthtml.common import *
+from monsterui.all import *
 
 
 def page_layout(title: str, *content):
     """
-    Base page layout with mobile-first design.
+    Base page layout with mobile-first design using MonsterUI.
 
-    Uses Pico CSS as foundation with custom overrides.
+    Uses MonsterUI Theme with custom flood status colors.
     """
+    custom_styles = Link(rel="stylesheet", href="/public/styles.css")
+
     return Html(
         Head(
             Meta(charset="utf-8"),
@@ -14,33 +17,40 @@ def page_layout(title: str, *content):
             Meta(name="description", content="Live flood monitoring for Shabbington village"),
             Meta(name="theme-color", content="#1e40af"),
             Title(title),
-            Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"),
-            Link(rel="stylesheet", href="/public/styles.css"),
+            *Theme.blue.headers(),
+            custom_styles,
             Script(src="https://unpkg.com/htmx.org@1.9.10"),
         ),
         Body(
             *content,
             Footer(
-                Div(
-                    P("Data from Environment Agency real-time data API (Beta).",
-                      cls="attribution"),
-                    P("Community-reported guidance only. ",
-                      Strong("Do not drive into floodwater."),
-                      cls="disclaimer"),
-                    cls="footer-content"
+                Container(
+                    DivCentered(
+                        P("Data from Environment Agency real-time data API (Beta).",
+                          cls="text-sm text-muted-foreground"),
+                        P(
+                            "Community-reported guidance only. ",
+                            Strong("Do not drive into floodwater.", cls="text-destructive"),
+                            cls="text-sm"
+                        ),
+                    ),
+                    cls="py-6 border-t"
                 ),
-                cls="page-footer"
             ),
-            hx_boost="true"
+            hx_boost="true",
+            cls="min-h-screen bg-background"
         ),
         lang="en"
     )
 
 
 def page_header():
-    """Page header with app title."""
+    """Page header with app title and emergency context."""
     return Header(
-        H1("Flood Pulse"),
-        P("Shabbington Village", cls="subtitle"),
-        cls="page-header"
+        DivCentered(
+            H1("Flood Pulse", cls="text-3xl font-bold text-primary"),
+            P("Shabbington Village Road Status", cls="text-muted-foreground"),
+            cls="space-y-1"
+        ),
+        cls="py-4 text-center"
     )

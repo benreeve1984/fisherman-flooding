@@ -1,4 +1,5 @@
 from fasthtml.common import *
+from monsterui.all import *
 from typing import Optional
 
 
@@ -6,17 +7,17 @@ def rainfall_stat(period: str, value: Optional[float]):
     """Single rainfall statistic display."""
     if value is None:
         return Div(
-            Span(period, cls="period-label"),
-            Span("--", cls="rainfall-value"),
-            Span("mm", cls="rainfall-unit"),
-            cls="rainfall-stat missing"
+            Span(period, cls="text-xs text-muted-foreground block"),
+            Span("--", cls="text-xl font-bold tabular-nums"),
+            Span("mm", cls="text-xs text-muted-foreground ml-0.5"),
+            cls="text-center p-2 bg-muted/50 rounded-lg opacity-50"
         )
 
     return Div(
-        Span(period, cls="period-label"),
-        Span(f"{value:.1f}", cls="rainfall-value"),
-        Span("mm", cls="rainfall-unit"),
-        cls="rainfall-stat"
+        Span(period, cls="text-xs text-muted-foreground block"),
+        Span(f"{value:.1f}", cls="text-xl font-bold tabular-nums"),
+        Span("mm", cls="text-xs text-muted-foreground ml-0.5"),
+        cls="text-center p-2 bg-muted/50 rounded-lg"
     )
 
 
@@ -27,27 +28,38 @@ def rainfall_card(
     data_quality: str = "ok"
 ):
     """
-    Displays rainfall totals aggregated from nearby stations.
+    Compact rainfall totals from nearby stations.
 
     Shows 24/48/72 hour accumulations.
     Informational only - no automated alerts.
     """
-    quality_note = None
-    if data_quality == "missing":
-        quality_note = Small("Rainfall data unavailable", cls="data-quality missing")
-    elif data_quality == "partial":
-        quality_note = Small("Some stations unavailable", cls="data-quality partial")
+    quality_cls = "text-muted-foreground"
+    quality_text = "Nearby stations"
 
-    return Article(
-        Header(H3("Recent Rainfall")),
-        Div(
-            rainfall_stat("24h", rain_24h),
-            rainfall_stat("48h", rain_48h),
-            rainfall_stat("72h", rain_72h),
-            cls="rainfall-grid"
+    if data_quality == "missing":
+        quality_cls = "text-yellow-600"
+        quality_text = "Data unavailable"
+    elif data_quality == "partial":
+        quality_cls = "text-yellow-600"
+        quality_text = "Partial data"
+
+    return Card(
+        CardHeader(
+            H4("Recent Rainfall", cls="text-sm font-semibold text-muted-foreground"),
         ),
-        Footer(
-            quality_note if quality_note else Small("From nearby stations"),
+        CardBody(
+            Grid(
+                rainfall_stat("24h", rain_24h),
+                rainfall_stat("48h", rain_48h),
+                rainfall_stat("72h", rain_72h),
+                cols=3,
+                cls="gap-2"
+            ),
+        ),
+        CardFooter(
+            DivCentered(
+                Small(quality_text, cls=quality_cls),
+            ),
         ),
         hx_get="/api/rainfall",
         hx_trigger="every 300s",

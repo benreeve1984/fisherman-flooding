@@ -173,3 +173,64 @@ def get_recent_observations(road_id: RoadId, limit: int = 10) -> list[Observatio
     except Exception as e:
         logger.error(f"Failed to get recent observations: {e}")
         return []
+
+
+def get_24h_status_counts(road_id: RoadId) -> dict[RoadStatus, int]:
+    """
+    Get count of reports by status in the last 24 hours.
+
+    Returns dict mapping status to count of reports.
+    """
+    try:
+        with get_db_cursor() as cur:
+            lookback = datetime.now(timezone.utc) - timedelta(hours=24)
+
+            cur.execute("""
+                SELECT status, COUNT(*) as count
+                FROM observations
+                WHERE road_id = %s
+                  AND timestamp_utc > %s
+                GROUP BY status
+                ORDER BY count DESC
+            """, (road_id.value, lookback))
+
+            rows = cur.fetchall()
+            return {RoadStatus(row["status"]): row["count"] for row in rows}
+    except Exception as e:
+        logger.error(f"Failed to get 24h status counts: {e}")
+        return {}
+
+
+def get_status_change_info(road_id: RoadId) -> Optional[tuple[RoadStatus, datetime]]:
+    """
+    Detect if the most recent report changed the consensus status.
+
+    Returns (previous_status, change_time) if status changed recently,
+    or None if no recent change detected.
+    """
+    try:
+        with get_db_cursor() as cur:
+            # Get two most recent reports
+            cur.execute("""
+                SELECT status, timestamp_utc
+                FROM observations
+                WHERE road_id = %s
+                ORDER BY timestamp_utc DESC
+                LIMIT 2
+            """, (road_id.value,))
+
+            rows = cur.fetchall()
+            if len(rows) < 2:
+                return None
+
+            current_status = RoadStatus(rows[0]["status"])
+            previous_status = RoadStatus(rows[1]["status"])
+
+            if current_status != previous_status:
+                # Status changed with the latest report
+                return (previous_status, rows[0]["timestamp_utc"])
+
+            return None
+    except Exception as e:
+        logger.error(f"Failed to get status change info: {e}")
+        return None
