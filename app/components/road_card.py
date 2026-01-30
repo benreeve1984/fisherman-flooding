@@ -155,7 +155,7 @@ def road_card(
     status = consensus.status if consensus else RoadStatus.UNKNOWN
     border_class = STATUS_BORDER_CLASSES[status]
 
-    # No recent reports state
+    # No recent reports state (no consensus in last 8 hours)
     if consensus is None:
         return Card(
             CardHeader(
@@ -165,9 +165,10 @@ def road_card(
                 ),
             ),
             CardBody(
-                P("No recent reports - be the first!", cls="text-muted-foreground text-center py-2"),
+                P("No reports in last 8 hours", cls="text-muted-foreground text-center py-2"),
             ),
-            CardFooter(
+            # Report button
+            Div(
                 Button(
                     "Report Current Status",
                     hx_get=f"/report/{road_id.value}",
@@ -175,8 +176,16 @@ def road_card(
                     hx_swap="innerHTML",
                     cls=ButtonT.primary + " w-full py-3",
                 ),
-                cls="pt-0"
+                cls="px-4 py-2"
             ),
+            # Show history even when no consensus (older reports)
+            Div(
+                history_list(observations or []),
+                cls="px-4 pb-3"
+            ) if observations else None,
+            hx_get=f"/api/road/{road_id.value}",
+            hx_trigger="every 30s",
+            hx_swap="outerHTML",
             cls=f"road-card {border_class}",
             id=f"road-{road_id.value}"
         )
